@@ -1,7 +1,6 @@
-import { ComponentType, FC, useEffect, useMemo, useRef, useState } from "react"
+import { ComponentType, FC, useMemo, useRef, useState } from "react"
 // eslint-disable-next-line no-restricted-imports
 import { Alert, TextInput, TextStyle, View, ViewStyle } from "react-native"
-import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
 import { Button } from "@/components/Button"
 import { PressableIcon } from "@/components/Icon"
@@ -9,26 +8,26 @@ import { Screen } from "@/components/Screen"
 import { AppleSignInButton, GoogleSignInButton } from "@/components/SocialAuthButtons"
 import { Text } from "@/components/Text"
 import { TextField, type TextFieldAccessoryProps } from "@/components/TextField"
-import Config from "@/config"
 import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
-import appleAuth from "@invertase/react-native-apple-authentication"
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
+interface RegisterScreenProps extends AppStackScreenProps<"Register"> {}
 
-export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
+export const RegisterScreen: FC<RegisterScreenProps> = ({ navigation }) => {
   const authPasswordInput = useRef<TextInput>(null)
+  const authConfirmPasswordInput = useRef<TextInput>(null)
 
-  const [authPassword, setAuthPassword] = useState("")
-  const [isAuthPasswordHidden, setIsAuthPasswordHidden] = useState(true)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const [attemptsCount, setAttemptsCount] = useState(0)
   const [authEmail, setAuthEmail] = useState("")
+  const [authPassword, setAuthPassword] = useState("")
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("")
+  const [isAuthPasswordHidden, setIsAuthPasswordHidden] = useState(true)
+  const [isAuthConfirmPasswordHidden, setIsAuthConfirmPasswordHidden] = useState(true)
+  const [isSubmitted, setIsSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const { signInWithEmail, loading: authLoading } = useAuth()
+  const { signUpWithEmail, loading: authLoading } = useAuth()
 
   const {
     themed,
@@ -36,32 +35,40 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   } = useAppTheme()
 
   const validationError = useMemo(() => {
-    if (!authEmail || authEmail.length === 0) return "Email can't be blank"
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) return "Must be a valid email address"
-    if (!authPassword || authPassword.length === 0) return "Password can't be blank"
-    if (authPassword.length < 6) return "Password must be at least 6 characters"
+    if (!authEmail || authEmail.length === 0) return "registerScreen:errors.emailRequired"
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail))
+      return "registerScreen:errors.emailInvalid"
+    if (!authPassword || authPassword.length === 0) return "registerScreen:errors.passwordRequired"
+    if (authPassword.length < 6) return "registerScreen:errors.passwordTooShort"
+    if (!authConfirmPassword || authConfirmPassword.length === 0)
+      return "registerScreen:errors.confirmPasswordRequired"
+    if (authPassword !== authConfirmPassword) return "registerScreen:errors.passwordsDoNotMatch"
     return ""
-  }, [authEmail, authPassword])
+  }, [authEmail, authPassword, authConfirmPassword])
 
   const error = isSubmitted ? validationError : ""
 
-  async function login() {
+  async function register() {
     setIsSubmitted(true)
-    setAttemptsCount(attemptsCount + 1)
 
     const validation = validationError
     if (validation) return
 
     setLoading(true)
-    const { error } = await signInWithEmail(authEmail, authPassword)
+    const { error } = await signUpWithEmail(authEmail, authPassword)
     setLoading(false)
 
     if (error) {
-      Alert.alert("Login Failed", error.message || "An error occurred during login")
+      Alert.alert("Registration Failed", error.message || "An error occurred during registration")
     } else {
       // Auth state will update automatically via AuthContext
       setIsSubmitted(false)
       setAuthPassword("")
+      setAuthConfirmPassword("")
+      Alert.alert(
+        "Registration Successful",
+        "Your account has been created successfully. Please check your email to verify your account.",
+      )
     }
   }
 
@@ -81,17 +88,35 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     [isAuthPasswordHidden, colors.palette.neutral800],
   )
 
+  const ConfirmPasswordRightAccessory: ComponentType<TextFieldAccessoryProps> = useMemo(
+    () =>
+      function ConfirmPasswordRightAccessory(props: TextFieldAccessoryProps) {
+        return (
+          <PressableIcon
+            icon={isAuthConfirmPasswordHidden ? "view" : "hidden"}
+            color={colors.palette.neutral800}
+            containerStyle={props.style}
+            size={20}
+            onPress={() => setIsAuthConfirmPasswordHidden(!isAuthConfirmPasswordHidden)}
+          />
+        )
+      },
+    [isAuthConfirmPasswordHidden, colors.palette.neutral800],
+  )
+
   return (
     <Screen
       preset="auto"
       contentContainerStyle={themed($screenContentContainer)}
       safeAreaEdges={["top", "bottom"]}
     >
-      <Text testID="login-heading" tx="loginScreen:logIn" preset="heading" style={themed($logIn)} />
-      <Text tx="loginScreen:enterDetails" preset="subheading" style={themed($enterDetails)} />
-      {attemptsCount > 2 && (
-        <Text tx="loginScreen:hint" size="sm" weight="light" style={themed($hint)} />
-      )}
+      <Text
+        testID="register-heading"
+        tx="registerScreen:createAccount"
+        preset="heading"
+        style={themed($heading)}
+      />
+      <Text tx="registerScreen:enterDetails" preset="subheading" style={themed($subheading)} />
 
       <TextField
         value={authEmail}
@@ -101,8 +126,8 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
         autoComplete="email"
         autoCorrect={false}
         keyboardType="email-address"
-        labelTx="loginScreen:emailFieldLabel"
-        placeholderTx="loginScreen:emailFieldPlaceholder"
+        labelTx="registerScreen:emailFieldLabel"
+        placeholderTx="registerScreen:emailFieldPlaceholder"
         helper={error}
         status={error ? "error" : undefined}
         onSubmitEditing={() => authPasswordInput.current?.focus()}
@@ -117,23 +142,38 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
         autoComplete="password"
         autoCorrect={false}
         secureTextEntry={isAuthPasswordHidden}
-        labelTx="loginScreen:passwordFieldLabel"
-        placeholderTx="loginScreen:passwordFieldPlaceholder"
-        onSubmitEditing={login}
+        labelTx="registerScreen:passwordFieldLabel"
+        placeholderTx="registerScreen:passwordFieldPlaceholder"
+        onSubmitEditing={() => authConfirmPasswordInput.current?.focus()}
         RightAccessory={PasswordRightAccessory}
       />
 
+      <TextField
+        ref={authConfirmPasswordInput}
+        value={authConfirmPassword}
+        onChangeText={setAuthConfirmPassword}
+        containerStyle={themed($textField)}
+        autoCapitalize="none"
+        autoComplete="password"
+        autoCorrect={false}
+        secureTextEntry={isAuthConfirmPasswordHidden}
+        labelTx="registerScreen:confirmPasswordFieldLabel"
+        placeholderTx="registerScreen:confirmPasswordFieldPlaceholder"
+        onSubmitEditing={register}
+        RightAccessory={ConfirmPasswordRightAccessory}
+      />
+
       <Button
-        testID="login-button"
-        tx="loginScreen:tapToLogIn"
-        style={themed($tapButton)}
+        testID="register-button"
+        tx="registerScreen:tapToRegister"
+        style={themed($registerButton)}
         preset="reversed"
-        onPress={login}
+        onPress={register}
         disabled={loading || authLoading}
       />
 
       <View style={themed($oauthButtonsContainer)}>
-        <Text style={themed($dividerText)} tx="loginScreen:orContinueWith" />
+        <Text style={themed($dividerText)} tx="registerScreen:orContinueWith" />
 
         <View style={themed($googleButton)}>
           <GoogleSignInButton disabled={loading || authLoading} />
@@ -144,15 +184,15 @@ export const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={themed($registerLinkContainer)}>
-        <Text tx="loginScreen:dontHaveAccount" style={themed($registerLinkText)} />
+      <View style={themed($loginLinkContainer)}>
+        <Text tx="registerScreen:alreadyHaveAccount" style={themed($loginLinkText)} />
         <Button
-          testID="register-link"
-          tx="loginScreen:createAccount"
+          testID="login-link"
+          tx="registerScreen:logIn"
           preset="default"
-          onPress={() => navigation.navigate("Register")}
-          style={themed($registerLinkButton)}
-          textStyle={themed($registerLinkButtonText)}
+          onPress={() => navigation.navigate("Login")}
+          style={themed($loginLinkButton)}
+          textStyle={themed($loginLinkButtonText)}
         />
       </View>
     </Screen>
@@ -164,24 +204,19 @@ const $screenContentContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingHorizontal: spacing.lg,
 })
 
-const $logIn: ThemedStyle<TextStyle> = ({ spacing }) => ({
+const $heading: ThemedStyle<TextStyle> = ({ spacing }) => ({
   marginBottom: spacing.sm,
 })
 
-const $enterDetails: ThemedStyle<TextStyle> = ({ spacing }) => ({
+const $subheading: ThemedStyle<TextStyle> = ({ spacing }) => ({
   marginBottom: spacing.lg,
-})
-
-const $hint: ThemedStyle<TextStyle> = ({ colors, spacing }) => ({
-  color: colors.tint,
-  marginBottom: spacing.md,
 })
 
 const $textField: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginBottom: spacing.lg,
 })
 
-const $tapButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+const $registerButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginTop: spacing.xs,
   marginBottom: spacing.lg,
 })
@@ -204,7 +239,7 @@ const $appleButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginBottom: spacing.sm,
 })
 
-const $registerLinkContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+const $loginLinkContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginTop: spacing.lg,
   flexDirection: "row",
   alignItems: "center",
@@ -212,17 +247,18 @@ const $registerLinkContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   gap: spacing.xs,
 })
 
-const $registerLinkText: ThemedStyle<TextStyle> = ({ colors }) => ({
+const $loginLinkText: ThemedStyle<TextStyle> = ({ colors }) => ({
   color: colors.textDim,
 })
 
-const $registerLinkButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+const $loginLinkButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   paddingVertical: 0,
   paddingHorizontal: spacing.xs,
   minHeight: 0,
 })
 
-const $registerLinkButtonText: ThemedStyle<TextStyle> = ({ colors }) => ({
+const $loginLinkButtonText: ThemedStyle<TextStyle> = ({ colors }) => ({
   color: colors.tint,
   textDecorationLine: "underline",
 })
+
