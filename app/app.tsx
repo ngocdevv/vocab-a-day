@@ -43,6 +43,7 @@ const config = {
       path: "",
     },
     Welcome: "welcome",
+    OAuthCallback: "auth/callback",
     Demo: {
       screens: {
         DemoShowroom: {

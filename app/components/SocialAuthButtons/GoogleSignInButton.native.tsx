@@ -1,6 +1,6 @@
+import { ViewStyle } from "react-native"
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 import type { SignInWithIdTokenCredentials } from "@supabase/supabase-js"
-import { ViewStyle } from "react-native"
 import "react-native-get-random-values"
 
 import { Button } from "@/components/Button"
@@ -23,7 +23,6 @@ export default function GoogleSignInButton({ onPress, disabled }: GoogleSignInBu
       if (onPress) {
         await onPress()
       } else {
-
         await GoogleSignin.hasPlayServices()
         const userInfo = await GoogleSignin.signIn()
 

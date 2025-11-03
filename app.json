@@ -1,7 +1,7 @@
 {
-  "name": "VocabAI",
-  "slug": "VocabAI",
-  "scheme": "vocabai",
+  "name": "VocabaDay",
+  "slug": "vocab-a-day",
+  "scheme": "vocabaday",
   "version": "1.0.0",
   "orientation": "portrait",
   "userInterfaceStyle": "automatic",
@@ -16,7 +16,7 @@
   ],
   "android": {
     "icon": "./assets/images/app-icon-android-legacy.png",
-    "package": "com.ngocdevv.vocabai",
+    "package": "com.ngocdevv.vocabaday",
     "adaptiveIcon": {
       "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
       "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
@@ -27,7 +27,21 @@
   "ios": {
     "icon": "./assets/images/app-icon-ios.png",
     "supportsTablet": true,
-    "bundleIdentifier": "com.ngocdevv.vocabai"
+    "bundleIdentifier": "com.ngocdevv.vocabaday",
+    "usesAppleSignIn": true,
+    "privacyManifests": {
+      "NSPrivacyAccessedAPITypes": [
+        {
+          "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+          "NSPrivacyAccessedAPITypeReasons": [
+            "CA92.1"
+          ]
+        }
+      ]
+    },
+    "infoPlist": {
+      "ITSAppUsesNonExemptEncryption": false
+    }
   },
   "web": {
     "favicon": "./assets/images/app-icon-web-favicon.png",
@@ -54,6 +68,12 @@
         }
       }
     ],
+    [
+      "@react-native-google-signin/google-signin",
+      {
+        "iosUrlScheme": "com.googleusercontent.apps.446319166457-s205n0106lvlgb7rmi58mu7vapvn7sdk"
+      }
+    ],
     "expo-build-properties"
   ],
   "experiments": {
@@ -62,6 +82,10 @@
   "extra": {
     "ignite": {
       "version": "11.3.2"
+    },
+    "eas": {
+      "projectId": "66139a0f-f267-4f42-832b-0f02d04c413f"
     }
-  }
+  },
+  "owner": "ngocdevv"
 }

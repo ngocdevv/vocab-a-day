@@ -1,18 +1,22 @@
 import { ComponentType, FC, useEffect, useMemo, useRef, useState } from "react"
 // eslint-disable-next-line no-restricted-imports
-import { TextInput, TextStyle, ViewStyle } from "react-native"
+import { Alert, TextInput, TextStyle, View, ViewStyle } from "react-native"
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
 import { Button } from "@/components/Button"
 import { PressableIcon } from "@/components/Icon"
 import { Screen } from "@/components/Screen"
+import { AppleSignInButton, GoogleSignInButton } from "@/components/SocialAuthButtons"
 import { Text } from "@/components/Text"
 import { TextField, type TextFieldAccessoryProps } from "@/components/TextField"
+import Config from "@/config"
 import { useAuth } from "@/context/AuthContext"
 import type { AppStackScreenProps } from "@/navigators/navigationTypes"
 import { useAppTheme } from "@/theme/context"
 import type { ThemedStyle } from "@/theme/types"
+import appleAuth from "@invertase/react-native-apple-authentication"
 
-interface LoginScreenProps extends AppStackScreenProps<"Login"> {}
+interface LoginScreenProps extends AppStackScreenProps<"Login"> { }
 
 export const LoginScreen: FC<LoginScreenProps> = () => {
   const authPasswordInput = useRef<TextInput>(null)
@@ -21,36 +25,44 @@ export const LoginScreen: FC<LoginScreenProps> = () => {
   const [isAuthPasswordHidden, setIsAuthPasswordHidden] = useState(true)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [attemptsCount, setAttemptsCount] = useState(0)
-  const { authEmail, setAuthEmail, setAuthToken, validationError } = useAuth()
+  const [authEmail, setAuthEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const { signInWithEmail, loading: authLoading } = useAuth()
 
   const {
     themed,
     theme: { colors },
   } = useAppTheme()
 
-  useEffect(() => {
-    // Here is where you could fetch credentials from keychain or storage
-    // and pre-fill the form fields.
-    setAuthEmail("ignite@infinite.red")
-    setAuthPassword("ign1teIsAwes0m3")
-  }, [setAuthEmail])
+  const validationError = useMemo(() => {
+    if (!authEmail || authEmail.length === 0) return "Email can't be blank"
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail)) return "Must be a valid email address"
+    if (!authPassword || authPassword.length === 0) return "Password can't be blank"
+    if (authPassword.length < 6) return "Password must be at least 6 characters"
+    return ""
+  }, [authEmail, authPassword])
 
   const error = isSubmitted ? validationError : ""
 
-  function login() {
+  async function login() {
     setIsSubmitted(true)
     setAttemptsCount(attemptsCount + 1)
 
-    if (validationError) return
+    const validation = validationError
+    if (validation) return
 
-    // Make a request to your server to get an authentication token.
-    // If successful, reset the fields and set the token.
-    setIsSubmitted(false)
-    setAuthPassword("")
-    setAuthEmail("")
+    setLoading(true)
+    const { error } = await signInWithEmail(authEmail, authPassword)
+    setLoading(false)
 
-    // We'll mock this with a fake token.
-    setAuthToken(String(Date.now()))
+    if (error) {
+      Alert.alert("Login Failed", error.message || "An error occurred during login")
+    } else {
+      // Auth state will update automatically via AuthContext
+      setIsSubmitted(false)
+      setAuthPassword("")
+    }
   }
 
   const PasswordRightAccessory: ComponentType<TextFieldAccessoryProps> = useMemo(
@@ -117,7 +129,20 @@ export const LoginScreen: FC<LoginScreenProps> = () => {
         style={themed($tapButton)}
         preset="reversed"
         onPress={login}
+        disabled={loading || authLoading}
       />
+
+      <View style={themed($oauthButtonsContainer)}>
+        <Text style={themed($dividerText)} tx="loginScreen:orContinueWith" />
+
+        <View style={themed($googleButton)}>
+          <GoogleSignInButton disabled={loading || authLoading} />
+        </View>
+
+        <View style={themed($appleButton)}>
+          <AppleSignInButton disabled={loading || authLoading} />
+        </View>
+      </View>
     </Screen>
   )
 }
@@ -146,4 +171,23 @@ const $textField: ThemedStyle<ViewStyle> = ({ spacing }) => ({
 
 const $tapButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
   marginTop: spacing.xs,
+  marginBottom: spacing.lg,
+})
+
+const $oauthButtonsContainer: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginTop: spacing.xl,
+})
+
+const $dividerText: ThemedStyle<TextStyle> = ({ colors, spacing }) => ({
+  textAlign: "center",
+  color: colors.textDim,
+  marginBottom: spacing.md,
+})
+
+const $googleButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginBottom: spacing.md,
+})
+
+const $appleButton: ThemedStyle<ViewStyle> = ({ spacing }) => ({
+  marginBottom: spacing.sm,
 })
