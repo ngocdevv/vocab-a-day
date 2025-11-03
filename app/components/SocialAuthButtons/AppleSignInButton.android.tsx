@@ -18,10 +18,10 @@ async function onAppleButtonPress() {
   // Configure the request
   appleAuthAndroid.configure({
     // The Service ID you registered with Apple
-    clientId: "com.ngocdevv.vocabaday.service",
+    clientId: process.env.EXPO_PUBLIC_APPLE_AUTH_SERVICE_ID || '',
     // Return URL added to your Apple dev console. We intercept this redirect, but it must still match
     // the URL you provided to Apple. It can be an empty route on your backend as it's never called.
-    redirectUri: "https://mcahaqdlrqxafkgirqbu.supabase.co/auth/v1/callback",
+    redirectUri: process.env.EXPO_PUBLIC_APPLE_AUTH_REDIRECT_URI || '',
     // The type of response requested - code, id_token, or both.
     responseType: appleAuthAndroid.ResponseType.ALL,
     // The amount of user information requested from Apple.

@@ -2,11 +2,28 @@
  * Supabase client configuration
  * This file sets up the Supabase client for authentication and database access
  */
+import Config from "@/config"
 import { createClient, processLock, type SignInWithIdTokenCredentials } from "@supabase/supabase-js"
+import { MMKV } from "react-native-mmkv"
 import "react-native-url-polyfill/auto"
 
-import Config from "@/config"
-import AsyncStorage from "@react-native-async-storage/async-storage"
+export const storage = new MMKV({
+  id: "supabase",
+  encryptionKey: "supabase",
+})
+
+const StorageAdapter = {
+  getItem: (key: string) => {
+    console.debug("getItem", { key })
+    return storage.getString(key) ?? null
+  },
+  setItem: (key: string, value: string) => {
+    return storage.set(key, value)
+  },
+  removeItem: (key: string) => {
+    return storage.delete(key)
+  },
+}
 
 const supabaseUrl = Config.SUPABASE_URL
 const supabaseAnonKey = Config.SUPABASE_ANON_KEY
@@ -21,7 +38,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  */
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage: StorageAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
