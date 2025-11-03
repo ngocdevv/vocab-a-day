@@ -43,6 +43,9 @@ const es: Translations = {
     emailFieldPlaceholder: "Ingresa tu email",
     passwordFieldPlaceholder: "Contraseña super secreta aquí",
     tapToLogIn: "¡Presiona acá para iniciar sesión!",
+    orContinueWith: "",
+    signInWithGoogle: "",
+    signInWithApple: "",
     hint: "Consejo: puedes usar cualquier email y tu contraseña preferida :)",
   },
   demoNavigator: {

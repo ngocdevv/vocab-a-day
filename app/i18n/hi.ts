@@ -42,6 +42,9 @@ const hi: Translations = {
     emailFieldPlaceholder: "अपना ईमेल पता दर्ज करें",
     passwordFieldPlaceholder: "सुपर सीक्रेट पासवर्ड यहाँ",
     tapToLogIn: "लॉग इन करने के लिए टैप करें!",
+    orContinueWith: "",
+    signInWithGoogle: "",
+    signInWithApple: "",
     hint: "संकेत: आप किसी भी ईमेल पते और अपने पसंदीदा पासवर्ड का उपयोग कर सकते हैं :)",
   },
   demoNavigator: {

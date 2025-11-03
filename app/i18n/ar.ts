@@ -42,6 +42,9 @@ const ar: Translations = {
     emailFieldPlaceholder: "ادخل بريدك الالكتروني",
     passwordFieldPlaceholder: "كلمة السر هنا فائقة السر",
     tapToLogIn: "انقر لتسجيل الدخول!",
+    orContinueWith: "",
+    signInWithGoogle: "",
+    signInWithApple: "",
     hint: "(: تلميح: يمكنك استخدام اي عنوان بريد الكتروني وكلمة السر المفضلة لديك",
   },
   demoNavigator: {

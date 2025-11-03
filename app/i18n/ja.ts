@@ -43,6 +43,9 @@ const ja: Translations = {
     emailFieldPlaceholder: "メールアドレスを入力してください",
     passwordFieldPlaceholder: "パスワードを入力してください",
     tapToLogIn: "タップしてログインしよう！",
+    orContinueWith: "",
+    signInWithGoogle: "",
+    signInWithApple: "",
     hint: "ヒント: お好みのメールアドレスとパスワードを使ってください :)",
   },
   demoNavigator: {

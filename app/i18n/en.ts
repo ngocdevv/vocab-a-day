@@ -41,6 +41,9 @@ const en = {
     emailFieldPlaceholder: "Enter your email address",
     passwordFieldPlaceholder: "Super secret password here",
     tapToLogIn: "Tap to log in!",
+    orContinueWith: "Or continue with",
+    signInWithGoogle: "Sign in with Google",
+    signInWithApple: "Sign in with Apple",
     hint: "Hint: you can use any email address and your favorite password :)",
   },
   demoNavigator: {
